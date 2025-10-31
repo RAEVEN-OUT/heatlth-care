@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Bot } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { PatientProfileCard } from "@/components/dashboard/patient-profile-card";
