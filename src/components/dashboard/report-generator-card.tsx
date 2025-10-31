@@ -1,7 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { FileScan, Loader, Upload, X, Bot } from "lucide-react";
 import { handleGenerateReport } from "@/lib/actions";
@@ -36,7 +36,7 @@ function SubmitButton() {
 }
 
 export function ReportGeneratorCard() {
-  const [state, formAction] = useFormState(handleGenerateReport, initialState);
+  const [state, formAction] = useActionState(handleGenerateReport, initialState);
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
