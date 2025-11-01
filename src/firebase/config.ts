@@ -9,10 +9,10 @@
 
 // Your web app's Firebase configuration
 export const firebaseConfig = {
-  apiKey: "TODO: Your API Key",
-  authDomain: "TODO: Your auth domain",
-  projectId: "TODO: Your project ID",
-  storageBucket: "TODO: Your storage bucket",
-  messagingSenderId: "TODO: Your messaging sender ID",
-  appId: "TODO: Your app ID"
+  "projectId": "studio-9465853285-42575",
+  "appId": "1:309899986959:web:5c6bc92750440a7eb57b7a",
+  "apiKey": "AIzaSyCv2r4VZDnolxFWTzvOCxmf9UR1Fzt0Cws",
+  "authDomain": "studio-9465853285-42575.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "309899986959"
 };
