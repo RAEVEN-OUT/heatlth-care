@@ -5,19 +5,30 @@ import {
   AreaChart,
   Tooltip,
 } from "recharts";
+import { Droplets, Footprints, HeartPulse } from "lucide-react";
 import type { HealthMetric } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { useMemo } from "react";
 
 type HealthMetricCardProps = {
   metric: HealthMetric;
 };
 
+const iconMap = {
+    "heart-rate": HeartPulse,
+    "blood-oxygen": Droplets,
+    "steps": Footprints,
+}
+
 export function HealthMetricCard({ metric }: HealthMetricCardProps) {
-  const { Icon, name, value, unit, data } = metric;
+  const { name, value, unit, data, id } = metric;
+
+  const Icon = useMemo(() => iconMap[id as keyof typeof iconMap] || HeartPulse, [id]);
+
   const chartConfig = {
     value: {
       label: name,
