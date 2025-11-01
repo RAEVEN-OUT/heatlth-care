@@ -1,7 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useActionState, useEffect, useRef, useTransition } from 'react';
 import { Bot, Loader, Sparkles } from 'lucide-react';
 import {
   Dialog,
@@ -22,10 +21,29 @@ const initialState = {
 };
 
 function SubmitButton() {
-  const { pending } = useFormStatus();
+  const [isPending, startTransition] = useTransition();
+
+  // This is a workaround to get the form pending state
+  // as useFormStatus is not available in this version of React
+  useEffect(() => {
+    const form = document.querySelector('form[data-symptom-form]');
+    if (form) {
+      const handleSubmit = (e: Event) => {
+        startTransition(() => {
+            // This will be handled by the form action
+        });
+      };
+      form.addEventListener('submit', handleSubmit);
+      return () => {
+        form.removeEventListener('submit', handleSubmit);
+      };
+    }
+  }, [startTransition]);
+
+
   return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? (
+    <Button type="submit" disabled={isPending} className="w-full">
+      {isPending ? (
         <>
           <Loader className="mr-2 h-4 w-4 animate-spin" />
           Analyzing...
@@ -78,7 +96,7 @@ export function SymptomCheckerDialog({ open, onOpenChange }: SymptomCheckerDialo
             Describe your symptoms below. This tool provides potential insights and is not a substitute for professional medical advice.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} action={formAction} className="space-y-4">
+        <form ref={formRef} action={formAction} className="space-y-4" data-symptom-form>
           <Textarea
             name="symptoms"
             placeholder="e.g., 'I have a sore throat, headache, and a slight fever.'"

@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/generate-medical-report-summary.ts';
 import '@/ai/ai-symptom-checker.ts';
+import '@/ai/flows/detect-human-flow.ts';

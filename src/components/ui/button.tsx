@@ -42,6 +42,35 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    
+    // A bit of a hack to work with useFormStatus and useActionState
+    const [pending, setPending] = React.useState(false);
+    const formRef = React.useRef<HTMLFormElement | null>(null);
+
+    React.useEffect(() => {
+        let currentForm: HTMLFormElement | null = null;
+        if (ref && 'current' in ref && ref.current) {
+            currentForm = ref.current.closest('form');
+            formRef.current = currentForm;
+        }
+
+        if (currentForm) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'data-pending') {
+                        const isPending = (mutation.target as HTMLFormElement).dataset.pending === 'true';
+                        setPending(isPending);
+                    }
+                });
+            });
+
+            observer.observe(currentForm, { attributes: true });
+
+            return () => observer.disconnect();
+        }
+    }, [ref]);
+
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}

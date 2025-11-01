@@ -2,6 +2,7 @@
 
 import { generateMedicalReportSummary } from '@/ai/flows/generate-medical-report-summary';
 import { aiSymptomChecker } from '@/ai/ai-symptom-checker';
+import { detectHuman } from '@/ai/flows/detect-human-flow';
 
 export type ReportFormState = {
   summary: string | null;
@@ -56,5 +57,29 @@ export async function handleSymptomCheck(
     } catch (e) {
         console.error(e);
         return { possibleConditions: null, error: 'An unexpected error occurred. Please try again later.' };
+    }
+}
+
+export type DetectHumanFormState = {
+    humanDetected: boolean | null;
+    error: string | null;
+};
+
+export async function handleDetectHuman(
+    prevState: DetectHumanFormState,
+    formData: FormData
+): Promise<DetectHumanFormState> {
+    const mediaDataUri = formData.get('mediaDataUri') as string;
+    
+    if (!mediaDataUri) {
+        return { humanDetected: null, error: 'No image provided.' };
+    }
+
+    try {
+        const result = await detectHuman({ mediaDataUri });
+        return { humanDetected: result.isHuman, error: null };
+    } catch (e) {
+        console.error(e);
+        return { humanDetected: null, error: 'An unexpected error occurred while detecting human.' };
     }
 }
