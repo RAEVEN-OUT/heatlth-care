@@ -1,16 +1,17 @@
 'use server';
 
 import { generateMedicalReportSummary } from '@/ai/flows/generate-medical-report-summary';
+import { aiSymptomChecker } from '@/ai/ai-symptom-checker';
 
-export type FormState = {
+export type ReportFormState = {
   summary: string | null;
   error: string | null;
 };
 
 export async function handleGenerateReport(
-  prevState: FormState,
+  prevState: ReportFormState,
   formData: FormData
-): Promise<FormState> {
+): Promise<ReportFormState> {
   const mediaDataUri = formData.get('mediaDataUri') as string;
 
   if (!mediaDataUri) {
@@ -28,4 +29,32 @@ export async function handleGenerateReport(
     console.error(e);
     return { summary: null, error: 'An unexpected error occurred. Please try again later.' };
   }
+}
+
+export type SymptomCheckerFormState = {
+    possibleConditions: string | null;
+    error: string | null;
+};
+
+export async function handleSymptomCheck(
+    prevState: SymptomCheckerFormState,
+    formData: FormData
+): Promise<SymptomCheckerFormState> {
+    const symptoms = formData.get('symptoms') as string;
+
+    if (!symptoms) {
+        return { possibleConditions: null, error: 'Please describe your symptoms.' };
+    }
+
+    try {
+        const result = await aiSymptomChecker({ symptoms });
+        if (result.possibleConditions) {
+            return { possibleConditions: result.possibleConditions, error: null };
+        } else {
+            return { possibleConditions: null, error: 'Failed to get insights. The AI could not process the request.' };
+        }
+    } catch (e) {
+        console.error(e);
+        return { possibleConditions: null, error: 'An unexpected error occurred. Please try again later.' };
+    }
 }

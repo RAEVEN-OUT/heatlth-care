@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react';
 import { Box, Bot } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { PatientProfileCard } from "@/components/dashboard/patient-profile-card";
@@ -7,9 +8,12 @@ import { HealthMetricCard } from "@/components/dashboard/health-metric-card";
 import { MedicationRemindersCard } from "@/components/dashboard/medication-reminders-card";
 import { FeatureCard } from "@/components/dashboard/feature-card";
 import { ReportGeneratorCard } from "@/components/dashboard/report-generator-card";
+import { SymptomCheckerDialog } from '@/components/dashboard/symptom-checker-dialog';
 import { healthMetrics } from "@/lib/data";
 
 export default function Home() {
+  const [symptomCheckerOpen, setSymptomCheckerOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 p-4 sm:p-6 md:p-8">
@@ -38,17 +42,20 @@ export default function Home() {
                 badgeText="Mobile Only"
                 badgeVariant="outline"
               />
-              <FeatureCard
-                Icon={Bot}
-                title="AI Symptom Checker"
-                description="Get potential insights into your symptoms with our AI-powered chatbot."
-                badgeText="Beta"
-                badgeVariant="secondary"
-              />
+              <div onClick={() => setSymptomCheckerOpen(true)}>
+                <FeatureCard
+                  Icon={Bot}
+                  title="AI Symptom Checker"
+                  description="Get potential insights into your symptoms with our AI-powered chatbot."
+                  badgeText="Beta"
+                  badgeVariant="secondary"
+                />
+              </div>
             </div>
           </div>
         </div>
       </main>
+      <SymptomCheckerDialog open={symptomCheckerOpen} onOpenChange={setSymptomCheckerOpen} />
     </div>
   );
 }
