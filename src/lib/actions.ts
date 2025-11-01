@@ -63,6 +63,8 @@ export async function handleSymptomCheck(
 export type DetectHumanFormState = {
     humanDetected: boolean | null;
     error: string | null;
+    confidence: number | null;
+    message: string | null;
 };
 
 export async function handleDetectHuman(
@@ -72,14 +74,19 @@ export async function handleDetectHuman(
     const mediaDataUri = formData.get('mediaDataUri') as string;
     
     if (!mediaDataUri) {
-        return { humanDetected: null, error: 'No image provided.' };
+        return { humanDetected: null, error: 'No image provided.', confidence: null, message: null };
     }
 
     try {
         const result = await detectHuman({ mediaDataUri });
-        return { humanDetected: result.isHuman, error: null };
+        return { 
+            humanDetected: result.humanDetected, 
+            error: null,
+            confidence: result.confidence || null,
+            message: result.message || null
+        };
     } catch (e) {
         console.error(e);
-        return { humanDetected: null, error: 'An unexpected error occurred while detecting human.' };
+        return { humanDetected: null, error: 'An unexpected error occurred while detecting human.', confidence: null, message: null };
     }
 }

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CameraOff, Bone, Heart, Zap, ScanFace, Loader } from 'lucide-react';
+import { CameraOff, Bone, Heart, Zap, ScanFace, Loader, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -20,6 +20,8 @@ import { handleDetectHuman } from '@/lib/actions';
 const initialState = {
   humanDetected: null,
   error: null,
+  confidence: null,
+  message: null,
 };
 
 function ScanButton() {
@@ -98,7 +100,6 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState(true);
   const [activeSystem, setActiveSystem] = useState<AnatomySystem>('skeletal');
-  const [frameDataUri, setFrameDataUri] = useState<string | null>(null);
 
   const activeSystemData = anatomySystems[activeSystem];
   const activeImage = PlaceHolderImages.find(img => img.id === activeSystemData.imageId);
@@ -110,12 +111,6 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
         title: "Error",
         description: state.error,
       });
-    } else if (state.humanDetected === false) {
-        toast({
-            variant: "default",
-            title: "No Person Detected",
-            description: "The AI could not find a person in the view. Please try again.",
-        });
     }
   }, [state, toast]);
 
@@ -124,7 +119,7 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
     const getCameraPermission = async () => {
       if (!open) return;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
         setHasCameraPermission(true);
 
         if (videoRef.current) {
@@ -142,11 +137,18 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
       }
     };
 
-    getCameraPermission();
+    if(open) {
+        getCameraPermission();
+    } else {
+        if (videoRef.current && videoRef.current.srcObject) {
+            (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+    }
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (videoRef.current && videoRef.current.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
       }
     };
   }, [open, toast]);
@@ -155,9 +157,14 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
   useEffect(() => {
     if (!open) {
         if(formRef.current) formRef.current.reset();
+        // @ts-ignore
         state.humanDetected = null;
+        // @ts-ignore
         state.error = null;
-        setFrameDataUri(null);
+        // @ts-ignore
+        state.confidence = null;
+        // @ts-ignore
+        state.message = null;
     }
   }, [open, state]);
 
@@ -170,8 +177,7 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
       const context = canvas.getContext('2d');
       if (context) {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUri = canvas.toDataURL('image/jpeg');
-        setFrameDataUri(dataUri);
+        const dataUri = canvas.toDataURL('image/jpeg', 0.8);
         return dataUri;
       }
     }
@@ -222,9 +228,37 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
           )}
         </div>
 
+        {state.message && (
+             <div className={cn('mb-4 p-4 rounded-lg flex items-start gap-3',
+                state.humanDetected ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'
+             )}>
+                {state.humanDetected ? (
+                     <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
+                ) : (
+                    <AlertCircle className="text-orange-600 flex-shrink-0 mt-0.5" size={20} />
+                )}
+                <div>
+                     <p className={cn('font-semibold',
+                        state.humanDetected ? 'text-green-800' : 'text-orange-800'
+                     )}>
+                        {state.humanDetected ? 'Detection Successful' : 'No Person Detected'}
+                     </p>
+                    <p className={cn('text-sm',
+                        state.humanDetected ? 'text-green-700' : 'text-orange-700'
+                    )}>
+                        {state.message}
+                    </p>
+                    {state.confidence && (
+                        <p className="text-xs mt-1 text-gray-600">
+                           Confidence: {(state.confidence * 100).toFixed(0)}%
+                        </p>
+                    )}
+                </div>
+            </div>
+        )}
+
         { hasCameraPermission && !state.humanDetected && (
             <form ref={formRef} action={handleFormAction} data-scanning-form>
-                <input type="hidden" name="mediaDataUri" value={frameDataUri || ''} />
                 <ScanButton />
             </form>
         )}
