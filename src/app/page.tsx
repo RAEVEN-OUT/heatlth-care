@@ -9,10 +9,12 @@ import { MedicationRemindersCard } from "@/components/dashboard/medication-remin
 import { FeatureCard } from "@/components/dashboard/feature-card";
 import { ReportGeneratorCard } from "@/components/dashboard/report-generator-card";
 import { SymptomCheckerDialog } from '@/components/dashboard/symptom-checker-dialog';
+import { ARAnatomyDialog } from '@/components/dashboard/ar-anatomy-dialog';
 import { healthMetrics } from "@/lib/data";
 
 export default function Home() {
   const [symptomCheckerOpen, setSymptomCheckerOpen] = useState(false);
+  const [arAnatomyOpen, setArAnatomyOpen] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -35,13 +37,15 @@ export default function Home() {
             <div className="lg:col-span-1 space-y-6">
               <PatientProfileCard />
               <MedicationRemindersCard />
-              <FeatureCard
-                Icon={Box}
-                title="AR Anatomy Visualizer"
-                description="Visualize the human anatomy in 3D augmented reality for patient education."
-                badgeText="Mobile Only"
-                badgeVariant="outline"
-              />
+              <div onClick={() => setArAnatomyOpen(true)}>
+                <FeatureCard
+                  Icon={Box}
+                  title="AR Anatomy Visualizer"
+                  description="Visualize the human anatomy in 3D augmented reality for patient education."
+                  badgeText="Mobile Only"
+                  badgeVariant="outline"
+                />
+              </div>
               <div onClick={() => setSymptomCheckerOpen(true)}>
                 <FeatureCard
                   Icon={Bot}
@@ -56,6 +60,7 @@ export default function Home() {
         </div>
       </main>
       <SymptomCheckerDialog open={symptomCheckerOpen} onOpenChange={setSymptomCheckerOpen} />
+      <ARAnatomyDialog open={arAnatomyOpen} onOpenChange={setArAnatomyOpen} />
     </div>
   );
 }
