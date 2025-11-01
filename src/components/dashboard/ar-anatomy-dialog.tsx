@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CameraOff, Bone, Heart, Zap } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 type ARAnatomyDialogProps = {
   open: boolean;
@@ -25,17 +27,20 @@ const anatomySystems = {
     skeletal: {
         name: 'Skeletal System',
         Icon: Bone,
-        color: 'text-primary-foreground/80'
+        color: 'text-primary-foreground/80',
+        imageId: 'skeletal-system',
     },
     circulatory: {
         name: 'Circulatory System',
         Icon: Heart,
-        color: 'text-red-400'
+        color: 'text-red-400',
+        imageId: 'circulatory-system',
     },
     muscular: {
         name: 'Muscular System',
         Icon: Zap,
-        color: 'text-yellow-400'
+        color: 'text-yellow-400',
+        imageId: 'muscular-system',
     },
 }
 
@@ -45,7 +50,9 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
   const [hasCameraPermission, setHasCameraPermission] = useState(true);
   const [activeSystem, setActiveSystem] = useState<AnatomySystem>('skeletal');
 
-  const ActiveIcon = anatomySystems[activeSystem].Icon;
+  const activeSystemData = anatomySystems[activeSystem];
+  const activeImage = PlaceHolderImages.find(img => img.id === activeSystemData.imageId);
+
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -98,13 +105,16 @@ export function ARAnatomyDialog({ open, onOpenChange }: ARAnatomyDialogProps) {
             </div>
           )}
 
-          {hasCameraPermission && (
-             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center text-white bg-black/30 p-4 rounded-lg">
-                    <ActiveIcon className={cn("h-16 w-16 mx-auto animate-pulse", anatomySystems[activeSystem].color)} />
-                    <p className="mt-2 font-semibold">Visualizing {anatomySystems[activeSystem].name}</p>
-                    <p className="text-xs text-primary-foreground/70">AR overlay placeholder</p>
-                </div>
+          {hasCameraPermission && activeImage && (
+             <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4">
+                <Image
+                    src={activeImage.imageUrl}
+                    alt={activeImage.description}
+                    width={300}
+                    height={300}
+                    data-ai-hint={activeImage.imageHint}
+                    className="w-auto h-full object-contain opacity-80 mix-blend-lighten animate-pulse"
+                />
             </div>
           )}
         </div>
