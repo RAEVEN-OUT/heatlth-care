@@ -21,6 +21,7 @@ import { MedicationRemindersCard } from '@/components/dashboard/medication-remin
 import { ReportGeneratorCard } from '@/components/dashboard/report-generator-card';
 import { SymptomCheckerDialog } from '@/components/dashboard/symptom-checker-dialog';
 import { ARAnatomyDialog } from '@/components/dashboard/ar-anatomy-dialog';
+import { HealthMonitoringCard } from '@/components/dashboard/health-monitoring-card';
 
 import { useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -38,9 +39,15 @@ function Dashboard() {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
       {/* Main Content */}
       <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Report Generator - Full Width */}
         <div className="md:col-span-3">
           <ReportGeneratorCard />
         </div>
+
+        {/* Healthcare Monitoring - Full Width */}
+        <HealthMonitoringCard />
+
+        {/* Health Metrics Cards */}
         {loading && Array.from({ length: 3 }).map((_, i) => (
            <div key={i} className="space-y-4 p-6 bg-card rounded-lg h-[280px]">
               <div className="flex justify-between">
