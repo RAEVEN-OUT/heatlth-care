@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { symptoms, age, gender } = await request.json();
+    const body = await request.json().catch(() => null);
+    const { symptoms, age, gender } = (body || {}) as { 
+      symptoms?: string; 
+      age?: string; 
+      gender?: string 
+    };
 
     if (!symptoms || !age || !gender) {
       return NextResponse.json(
@@ -11,19 +16,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const appId = process.env.INFERMEDICA_APP_ID;
+    const appKey = process.env.INFERMEDICA_APP_KEY;
+
+    if (!appId || !appKey) {
+      console.error('Missing Infermedica API credentials');
+      return NextResponse.json(
+        { error: 'Symptom checker service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+
     // Parse symptoms
     const parseResponse = await fetch('https://api.infermedica.com/v3/parse', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'App-Id': process.env.INFERMEDICA_APP_ID || '',
-        'App-Key': process.env.INFERMEDICA_APP_KEY || '',
+        'Accept': 'application/json',
+        'App-Id': appId,
+        'App-Key': appKey,
       },
       body: JSON.stringify({ text: symptoms }),
     });
 
     if (!parseResponse.ok) {
-      throw new Error('Failed to parse symptoms');
+      throw new Error(`Parse failed: ${parseResponse.status}`);
     }
 
     const parseData = await parseResponse.json();
@@ -35,8 +52,9 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'App-Id': process.env.INFERMEDICA_APP_ID || '',
-          'App-Key': process.env.INFERMEDICA_APP_KEY || '',
+          'Accept': 'application/json',
+          'App-Id': appId,
+          'App-Key': appKey,
         },
         body: JSON.stringify({
           sex: gender,
@@ -50,7 +68,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!diagnosisResponse.ok) {
-      throw new Error('Failed to get diagnosis');
+      throw new Error(`Diagnosis failed: ${diagnosisResponse.status}`);
     }
 
     const diagnosisData = await diagnosisResponse.json();
@@ -58,7 +76,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Infermedica API Error:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze symptoms' },
+      { error: 'Failed to analyze symptoms. Please try again.' },
       { status: 500 }
     );
   }

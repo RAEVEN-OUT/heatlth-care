@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 
 import { DashboardHeader } from '@/components/dashboard/header';
+import { AppHeader } from '@/components/app-header';
 import { PatientProfileCard } from '@/components/dashboard/patient-profile-card';
 import { HealthMetricCard } from '@/components/dashboard/health-metric-card';
 import { MedicationRemindersCard } from '@/components/dashboard/medication-reminders-card';
@@ -48,7 +49,7 @@ function Dashboard() {
         <HealthMonitoringCard />
 
         {/* Health Metrics Cards */}
-        {loading && Array.from({ length: 3 }).map((_, i) => (
+        {/* {loading && Array.from({ length: 3 }).map((_, i) => (
            <div key={i} className="space-y-4 p-6 bg-card rounded-lg h-[280px]">
               <div className="flex justify-between">
                 <Skeleton className="h-5 w-1/3" />
@@ -57,21 +58,20 @@ function Dashboard() {
               <Skeleton className="h-8 w-1/4" />
               <Skeleton className="h-24 w-full" />
             </div>
-        ))}
+        ))} */}
         {healthMetrics?.map((metric) => (
           <HealthMetricCard key={metric.id} metric={metric} />
         ))}
       </div>
 
       {/* Sidebar */}
-      <div className="lg:col-span-1 space-y-6">
+      {/* <div className="lg:col-span-1 space-y-6">
         <PatientProfileCard />
         <MedicationRemindersCard />
-      </div>
+      </div> */}
     </div>
   );
 }
-
 
 export default function Home() {
   const [symptomCheckerOpen, setSymptomCheckerOpen] = useState(false);
@@ -80,7 +80,7 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen w-full">
         <Sidebar
           variant="floating"
           collapsible="icon"
@@ -138,14 +138,19 @@ export default function Home() {
               </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="p-4 sm:p-6 md:p-8 flex-1">
-          <div className="max-w-screen-2xl mx-auto space-y-6">
-            {activePage === 'dashboard' && <Dashboard />}
-            {activePage === 'profile' && <PatientProfileCard />}
-            {activePage === 'reminders' && <MedicationRemindersCard />}
+        
+        <SidebarInset className="flex-1 flex flex-col">
+          <AppHeader />
+          <div className="flex-1 p-4 sm:p-6 md:p-8">
+            <div className="max-w-screen-2xl mx-auto space-y-6">
+              {activePage === 'dashboard' && <Dashboard />}
+              {activePage === 'profile' && <PatientProfileCard />}
+              {activePage === 'reminders' && <MedicationRemindersCard />}
+            </div>
           </div>
         </SidebarInset>
       </div>
+      
       <SymptomCheckerDialog
         open={symptomCheckerOpen}
         onOpenChange={setSymptomCheckerOpen}

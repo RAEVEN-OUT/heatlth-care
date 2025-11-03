@@ -13,7 +13,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const response = await fetch(
-      `https://api.fda.gov/drug/label.json?search=openfda.brand_name:"${drugName}"&limit=1`
+      `https://api.fda.gov/drug/label.json?search=openfda.brand_name:"${encodeURIComponent(drugName)}"&limit=1`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
     );
 
     if (!response.ok) {
@@ -43,7 +48,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('FDA API Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch drug information' },
+      { error: 'Failed to fetch drug information. Please try again later.' },
       { status: 500 }
     );
   }

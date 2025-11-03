@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-type FdcSearchFood = { fdcId: number; description: string; dataType?: string; brandName?: string; };
-type FdcNutrient = { nutrientName?: string; unitName?: string; value?: number; };
+type FdcSearchFood = { 
+  fdcId: number; 
+  description: string; 
+  dataType?: string; 
+  brandName?: string; 
+};
+
 type FdcFoodDetail = {
   description?: string;
   brandName?: string;
@@ -11,27 +16,61 @@ type FdcFoodDetail = {
     carbohydrates?: { value?: number };
     fat?: { value?: number };
   };
-  foodNutrients?: Array<{ nutrient?: { name?: string }; amount?: number; unitName?: string }>;
+  foodNutrients?: Array<{ 
+    nutrient?: { name?: string }; 
+    amount?: number; 
+    unitName?: string 
+  }>;
 };
 
 export async function POST(request: NextRequest) {
   try {
-    const { query } = await request.json() as { query?: string };
-    if (!query) return NextResponse.json({ error: 'Food query is required' }, { status: 400 });
+    const body = await request.json().catch(() => null);
+    const { query } = (body || {}) as { query?: string };
+    
+    if (!query) {
+      return NextResponse.json(
+        { error: 'Food query is required' }, 
+        { status: 400 }
+      );
+    }
 
     const apiKey = process.env.FDC_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: 'Missing FDC API key' }, { status: 500 });
+    if (!apiKey) {
+      console.error('Missing FDC_API_KEY environment variable');
+      return NextResponse.json(
+        { error: 'Nutrition service temporarily unavailable' }, 
+        { status: 503 }
+      );
+    }
 
     // 1) Search for a food
-    const searchRes = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${apiKey}&query=${encodeURIComponent(query)}&pageSize=1`);
-    if (!searchRes.ok) return NextResponse.json({ error: 'FDC search failed' }, { status: 502 });
+    const searchUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${apiKey}&query=${encodeURIComponent(query)}&pageSize=1`;
+    const searchRes = await fetch(searchUrl, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!searchRes.ok) {
+      throw new Error(`FDC search failed: ${searchRes.status}`);
+    }
+    
     const searchJson = await searchRes.json() as { foods?: FdcSearchFood[] };
     const first = searchJson.foods?.[0];
-    if (!first?.fdcId) return NextResponse.json({ foods: [] });
+    
+    if (!first?.fdcId) {
+      return NextResponse.json({ foods: [] });
+    }
 
     // 2) Get details for nutrients
-    const detailRes = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${first.fdcId}?api_key=${apiKey}`);
-    if (!detailRes.ok) return NextResponse.json({ error: 'FDC details failed' }, { status: 502 });
+    const detailUrl = `https://api.nal.usda.gov/fdc/v1/food/${first.fdcId}?api_key=${apiKey}`;
+    const detailRes = await fetch(detailUrl, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!detailRes.ok) {
+      throw new Error(`FDC details failed: ${detailRes.status}`);
+    }
+    
     const detail = await detailRes.json() as FdcFoodDetail;
 
     const name = detail.description || first.description || 'Unknown Food';
@@ -45,15 +84,16 @@ export async function POST(request: NextRequest) {
 
     if (!ln && Array.isArray(detail.foodNutrients)) {
       const find = (n: string) =>
-        detail.foodNutrients?.find(fn => fn.nutrient?.name?.toLowerCase().includes(n))?.amount ?? 0;
-      // Values are typically per 100 g serving
-      calories = find('energy');        // kcal
-      protein  = find('protein');       // g
-      carbs    = find('carbohydrate');  // g
-      fat      = find('fat');           // g
+        detail.foodNutrients?.find(fn => 
+          fn.nutrient?.name?.toLowerCase().includes(n)
+        )?.amount ?? 0;
+      
+      calories = find('energy');
+      protein = find('protein');
+      carbs = find('carbohydrate');
+      fat = find('fat');
     }
 
-    // Normalize to NutritionData-style shape (assume 100 g)
     const foods = [{
       id: Date.now(),
       name,
@@ -65,7 +105,11 @@ export async function POST(request: NextRequest) {
     }];
 
     return NextResponse.json({ foods });
-  } catch (e) {
-    return NextResponse.json({ error: 'Failed to fetch nutrition data' }, { status: 500 });
+  } catch (error) {
+    console.error('Nutrition API Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch nutrition data. Please try again.' }, 
+      { status: 500 }
+    );
   }
 }
