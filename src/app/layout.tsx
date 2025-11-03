@@ -3,12 +3,13 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
+import Navigation from "@/components/Navigation";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "HealthSight AI",
-  description: "An AI-Powered Healthcare Assistant",
+  description: "An AI-Powered Healthcare Assistant with Drug Checker, Nutrition Tracker, and Symptom Analysis",
 };
 
 export default function RootLayout({
@@ -25,7 +26,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background h-full">
         <FirebaseClientProvider>
-          {children}
+          <Navigation />
+          <main className="min-h-screen">
+            {children}
+          </main>
         </FirebaseClientProvider>
         <Toaster />
       </body>
